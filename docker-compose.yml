@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  shopping-service:
+    image: natthaphanch/toy-store-service:0.0.1
+    build: 
+      context: store-service
+    container_name: shopping-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - shopping-database
+    restart: always
+    environment: 
+      - TEST_MODE=true
+      - BANK_GATEWAY=pyament-service
+      - SHIPPING_GATEWAY=shipping-service
+      - DBCONNECTION=sealteam:sckshuhari@(shopping-database:3306)/toy
+
+  shopping-database:
+    image: mysql:8.0.22
+    container_name: shopping-database
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=sealteam
+      - MYSQL_PASSWORD=sckshuhari
+      - MYSQL_DATABASE=toy
+    volumes:
+      - ./tearup/:/docker-entrypoint-initdb.d/
+    ports:
+      - "3306:3306"
+
+  shopping-nginx:
+    image: nginx:1.19.3-alpine
+    container_name: shopping-nginx
+    restart: always
+    volumes:
+        - ./html:/etc/nginx/html:ro
+        - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - shopping-service
+    ports:
+      - "80:80"
+
+  pyament-service:
+    image: andyrbell/mountebank:2.3.2
+    volumes:
+      - ./payment-gateway/imposters.json:/imposters/imposters.json
+    ports:
+      - '2525:2525'
+      - '81:80'
+    command:
+      [
+        'mb',
+        'start',
+        '--configfile',
+        '/imposters/imposters.json',
+        '--allowInjection',
+      ]
+    
+  shipping-service:
+    image: andyrbell/mountebank:2.3.2
+    volumes:
+      - ./shipping-gateway/imposters.json:/imposters/imposters.json
+    ports:
+      - '2626:2525'
+      - '82:80'
+    command:
+      [
+        'mb',
+        'start',
+        '--configfile',
+        '/imposters/imposters.json',
+        '--allowInjection',
+      ]
+    
