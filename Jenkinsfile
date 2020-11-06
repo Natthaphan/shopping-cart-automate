@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sh label: 'robot', script: '''cd test/api
                 sleep 5
-                robot greeting.robot'''
+                robot product-success-template.robot'''
             }
 
             post {
