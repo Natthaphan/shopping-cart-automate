@@ -14,5 +14,28 @@ pipeline {
                 }
             }
         }
+
+        stage('build and start application') {
+
+            steps {
+                sh label: 'docker-compose', script: 'docker-compose up -d --build --force-recreate'
+            }
+        }
+
+        stage('run api test') {
+
+            steps {
+                sh label: 'robot', script: '''cd test/api
+                sleep 5
+                robot greeting.robot'''
+            }
+
+            post {
+                always {
+                    robot outputPath: 'test/api/', passThreshold: 100.0
+                    sh label: '', script: 'docker-compose down'
+                }
+            }
+        }
     }
 }
