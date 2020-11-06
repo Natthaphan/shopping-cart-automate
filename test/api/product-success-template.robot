@@ -7,4 +7,4 @@ Hello World
     ${resp}=    Get Request    greeting    /api/v1/product
     Request Should Be Successful    ${resp}
     ${message}=   Convert To String    ${resp.content}
-    Should Contain    ${message}    Hello, World
+    Should Contain    ${message}    products
